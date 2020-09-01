@@ -16,6 +16,9 @@ import os
 import pathlib
 import urllib.request
 import zipfile
+import torch
+
+from transformers import BertConfig, BertForPreTraining, load_tf_weights_in_bert
 
 class GooglePretrainedWeightDownloader:
     def __init__(self, save_path):
@@ -149,6 +152,22 @@ class GooglePretrainedWeightDownloader:
               print('SHA256sum does not match on file:', extracted_file, 'from download url:', url)
             else:
               print(file[:-4] + '/' + extracted_file, '\t', 'verified')
+
+          config = BertConfig.from_json_file(extract_to_path / "bert_config.json")
+          print("Building PyTorch model from configuration: {}".format(str(config)))
+          model = BertForPreTraining(config)
+
+          # Load weights from tf checkpoint
+          load_tf_weights_in_bert(model, config, extract_to_path / "bert_model.ckpt")
+
+          # Save pytorch-model
+          print("Save PyTorch model to {}".format(extract_to_path))
+          torch.save({'model': model.state_dict(),
+                      'optimizer': None,
+                      'master params': None,
+                      'files': None,
+                      'epoch': None,
+                      'data_loader': None}, extract_to_path / "ckpt_pretrained.pt")
 
         if not found_mismatch_sha:
           print("All downloads pass sha256sum verification.")
