@@ -1,7 +1,6 @@
 #!/bin/bash
 
-CMD=${1:-/bin/bash}
-NV_VISIBLE_DEVICES=${2:-"all"}
+NV_VISIBLE_DEVICES=${1:-"all"}
 DOCKER_BRIDGE=${3:-"host"}
 
 docker run -it --rm \
@@ -13,4 +12,4 @@ docker run -it --rm \
   -e LD_LIBRARY_PATH='/workspace/install/lib/' \
   -v $PWD:/workspace/bert \
   -v $PWD/results:/results \
-  bert $CMD
+  bert 
