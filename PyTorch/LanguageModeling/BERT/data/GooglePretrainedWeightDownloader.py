@@ -13,6 +13,7 @@
 
 import hashlib
 import os
+import pathlib
 import urllib.request
 import zipfile
 
@@ -25,6 +26,7 @@ class GooglePretrainedWeightDownloader:
 
         # Download urls
         self.model_urls = {
+            'bert_tiny_uncased': ('https://storage.googleapis.com/bert_models/2020_02_20/uncased_L-2_H-128_A-2.zip', 'uncased_L-2_H-128_A-2.zip'),
             'bert_base_uncased': ('https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip', 'uncased_L-12_H-768_A-12.zip'),
             'bert_large_uncased': ('https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-24_H-1024_A-16.zip', 'uncased_L-24_H-1024_A-16.zip'),
             'bert_base_cased': ('https://storage.googleapis.com/bert_models/2018_10_18/cased_L-12_H-768_A-12.zip', 'cased_L-12_H-768_A-12.zip'),
@@ -35,6 +37,13 @@ class GooglePretrainedWeightDownloader:
         }
 
         # SHA256sum verification for file download integrity (and checking for changes from the download source over time)
+        self.bert_tiny_uncased_sha = {
+            'bert_config.json': 'cf3179684f7c360dd6185962d480e7d426ceb8fe49f5db7b64bdc15dba0b8798',
+            'bert_model.ckpt.data-00000-of-00001': '0a5c4985757a3bb63eb0da64be4f49d27bdfb99cffc54f7a86155c4f8f328af9',
+            'bert_model.ckpt.index': '11607dd99768be0c1d4ba87fa6c4616be1133b0d1ab3c2f8c607e3635193bb98',
+            'vocab.txt': '07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3',
+        }
+
         self.bert_base_uncased_sha = {
             'bert_config.json': '7b4e5f53efbd058c67cda0aacfafb340113ea1b5797d9ce6ee411704ba21fcbc',
             'bert_model.ckpt.data-00000-of-00001': '58580dc5e0bf0ae0d2efd51d0e8272b2f808857f0a43a88aaf7549da6d7a8a84',
@@ -93,6 +102,7 @@ class GooglePretrainedWeightDownloader:
 
         # Relate SHA to urls for loop below
         self.model_sha = {
+            'bert_tiny_uncased': self.bert_tiny_uncased_sha,
             'bert_base_uncased': self.bert_base_uncased_sha,
             'bert_large_uncased': self.bert_large_uncased_sha,
             'bert_base_cased': self.bert_base_cased_sha,
@@ -127,7 +137,8 @@ class GooglePretrainedWeightDownloader:
 
           print('Unzipping', file)
           zip = zipfile.ZipFile(file, 'r')
-          zip.extractall(self.save_path)
+          extract_to_path = pathlib.Path(self.save_path) / (pathlib.Path(file).stem if model == "bert_tiny_uncased" else "")
+          zip.extractall(path=extract_to_path)
           zip.close()
 
           sha_dict = self.model_sha[model]
