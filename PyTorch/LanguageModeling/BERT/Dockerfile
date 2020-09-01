@@ -61,7 +61,8 @@ RUN conda install -c conda-forge click=7.1.1 \
 	fzf \
 	jupyter_console=6.2.0 \
 	pudb=2019.2 \
-	tensorboardX=2.1
+	tensorboardX=2.1 \
+	tensorflow=1.14.0
 RUN pip install transformers==2.11.0
 
 RUN git clone https://github.com/junegunn/fzf.git $HOME/.fzf
