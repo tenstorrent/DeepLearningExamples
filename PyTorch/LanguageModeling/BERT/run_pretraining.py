@@ -343,15 +343,16 @@ def prepare_model_and_optimizer(args, device):
     # Prepare model
     config = modeling.BertConfig.from_json_file(args.config_file)
 
-    # Padding for divisibility by 8
-    if config.vocab_size % 8 != 0:
-        config.vocab_size += 8 - (config.vocab_size % 8)
-
-    modeling.ACT2FN["bias_gelu"] = modeling.bias_gelu_training
-    model = modeling.BertForPreTraining(config)
-
     checkpoint = None
     if not args.resume_from_checkpoint:
+        # Padding for divisibility by 8
+        # Only do padding if pretraining from scratch
+        if config.vocab_size % 8 != 0:
+            config.vocab_size += 8 - (config.vocab_size % 8)
+
+        modeling.ACT2FN["bias_gelu"] = modeling.bias_gelu_training
+        model = modeling.BertForPreTraining(config)
+
         global_step = 0
     else:
         if args.resume_step == -1 and not args.init_checkpoint:
@@ -364,6 +365,12 @@ def prepare_model_and_optimizer(args, device):
             checkpoint = torch.load(os.path.join(args.output_dir, "ckpt_{}.pt".format(global_step)), map_location="cpu")
         else:
             checkpoint = torch.load(args.init_checkpoint, map_location="cpu")
+
+        # If pretrained with padding, use the same vocab_size
+        config.vocab_size = checkpoint["model"]["bert.embeddings.word_embeddings.weight"].shape[0]
+
+        modeling.ACT2FN["bias_gelu"] = modeling.bias_gelu_training
+        model = modeling.BertForPreTraining(config)
 
         model.load_state_dict(checkpoint['model'], strict=False)
         

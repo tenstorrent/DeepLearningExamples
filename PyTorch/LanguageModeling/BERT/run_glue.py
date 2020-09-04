@@ -542,9 +542,9 @@ def main(args):
 
     # Prepare model
     config = modeling.BertConfig.from_json_file(args.config_file)
-    # Padding for divisibility by 8
-    if config.vocab_size % 8 != 0:
-        config.vocab_size += 8 - (config.vocab_size % 8)
+
+    loaded_model = torch.load(args.init_checkpoint, map_location='cpu')["model"]
+    config.vocab_size = loaded_model["bert.embeddings.word_embeddings.weight"].shape[0]
 
     modeling.ACT2FN["bias_gelu"] = modeling.bias_gelu_training
     model = modeling.BertForSequenceClassification(
@@ -553,7 +553,7 @@ def main(args):
     )
     logger.info("USING CHECKPOINT from {}".format(args.init_checkpoint))
     model.load_state_dict(
-        torch.load(args.init_checkpoint, map_location='cpu')["model"],
+        loaded_model,
         strict=False,
     )
     logger.info("USED CHECKPOINT from {}".format(args.init_checkpoint))
