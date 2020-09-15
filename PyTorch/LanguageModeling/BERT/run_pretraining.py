@@ -597,8 +597,11 @@ def main():
                     training_steps += 1
                     batch = [t.to(device) for t in batch]
                     input_ids, segment_ids, input_mask, masked_lm_labels, next_sentence_labels = batch
-                    prediction_scores, seq_relationship_score = model(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+                    model_output = model(input_ids=input_ids, token_type_ids=segment_ids, attention_mask=input_mask)
+                    prediction_scores, seq_relationship_score = model_output[:2]
                     loss = criterion(prediction_scores, seq_relationship_score, masked_lm_labels, next_sentence_labels)
+                    if len(model_output) >= 4:
+                        loss = loss + model_output[3]
                     if args.n_gpu > 1:
                         loss = loss.mean()  # mean() to average on multi-gpu.
 
